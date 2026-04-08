@@ -1,0 +1,189 @@
+-- ======================================================
+-- 1. PROFILES (extiende auth.users)
+-- ======================================================
+create table profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text not null,
+  role text check (role in ('customer','admin','staff')) default 'customer',
+  created_at timestamp default now()
+);
+
+-- ======================================================
+-- 2. CATEGORIES
+-- ======================================================
+create table categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  parent_id uuid references categories(id),
+  created_at timestamp default now()
+);
+
+-- ======================================================
+-- 3. PRODUCTS (única tabla con jerarquía)
+-- ======================================================
+create table products (
+  id uuid primary key default gen_random_uuid(),
+  parent_id uuid references products(id), -- null = producto padre
+  name text not null,
+  description text,
+  sku text unique, -- obligatorio solo en hijos
+  sale_price numeric(10,2), -- precio de venta al cliente final
+  stock int default 0, -- se gestiona a nivel de hijos
+  created_at timestamp default now()
+);
+
+-- ======================================================
+-- 3.1 PRODUCT_CATEGORIES (relación muchos a muchos)
+-- ======================================================
+create table product_categories (
+  product_id uuid references products(id) on delete cascade,
+  category_id uuid references categories(id) on delete cascade,
+  primary key (product_id, category_id)
+);
+
+-- ======================================================
+-- 4. SUPPLIERS (proveedores)
+-- ======================================================
+create table suppliers (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  contact_info jsonb,
+  created_at timestamp default now()
+);
+
+-- ======================================================
+-- 5. PURCHASES (compras a proveedores)
+-- ======================================================
+create table purchases (
+  id uuid primary key default gen_random_uuid(),
+  supplier_id uuid references suppliers(id),
+  total numeric(10,2),
+  created_at timestamp default now()
+);
+
+create table purchase_items (
+  id uuid primary key default gen_random_uuid(),
+  purchase_id uuid references purchases(id) on delete cascade,
+  product_id uuid references products(id), -- apunta directo al producto hijo
+  quantity int not null,
+  cost_price numeric(10,2) not null -- precio de compra
+);
+
+-- ======================================================
+-- 6. ORDERS (pedidos de clientes)
+-- ======================================================
+create table orders (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid references profiles(id),
+  total numeric(10,2),
+  status text check (status in ('pending','paid','shipped','delivered','cancelled')) default 'pending',
+  created_at timestamp default now()
+);
+
+create table order_items (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references orders(id) on delete cascade,
+  product_id uuid references products(id), -- apunta directo al producto hijo
+  quantity int not null,
+  sale_price numeric(10,2) not null -- precio de venta aplicado en la orden
+);
+
+-- ======================================================
+-- 6.1 ORDER_COST_ALLOCATIONS (match entre compras y ventas)
+-- ======================================================
+create table order_cost_allocations (
+  id uuid primary key default gen_random_uuid(),
+  order_item_id uuid references order_items(id) on delete cascade,
+  purchase_item_id uuid references purchase_items(id),
+  quantity int not null,
+  cost_price numeric(10,2) not null -- se copia desde la compra
+);
+
+-- ======================================================
+-- 7. STOCK MOVEMENTS (trazabilidad de entradas/salidas)
+-- ======================================================
+create table stock_movements (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid references products(id), -- apunta al producto hijo
+  type text check (type in ('in','out')), -- entrada o salida
+  quantity int not null,
+  reference text, -- id de compra o pedido
+  created_at timestamp default now()
+);
+
+-- ======================================================
+-- 8. VISTA DE PROFIT REAL
+-- ======================================================
+create view product_profit as
+select
+  o.id as order_id,
+  oi.id as order_item_id,
+  oi.product_id,
+  oi.quantity,
+  oi.sale_price,
+  o.created_at as order_date,
+  sum(oca.cost_price * oca.quantity) as total_cost,
+  oi.sale_price * oi.quantity as total_sale,
+  (oi.sale_price * oi.quantity - sum(oca.cost_price * oca.quantity)) as profit
+from order_items oi
+join orders o on o.id = oi.order_id
+join order_cost_allocations oca on oca.order_item_id = oi.id
+where o.status <> 'cancelled'
+group by o.id, oi.id, oi.product_id, oi.quantity, oi.sale_price, o.created_at;
+
+-- ======================================================
+-- 9. HABILITAR RLS
+-- ======================================================
+alter table profiles enable row level security;
+alter table categories enable row level security;
+alter table products enable row level security;
+alter table product_categories enable row level security;
+alter table suppliers enable row level security;
+alter table purchases enable row level security;
+alter table purchase_items enable row level security;
+alter table orders enable row level security;
+alter table order_items enable row level security;
+alter table order_cost_allocations enable row level security;
+alter table stock_movements enable row level security;
+
+-- ======================================================
+-- 10. POLICIES BÁSICAS
+-- ======================================================
+-- Profiles: cada usuario solo ve su perfil
+create policy "Users can view their own profile"
+on profiles for select
+using (auth.uid() = id);
+
+-- Admins pueden ver todo
+create policy "Admins can manage all profiles"
+on profiles for all
+using (
+  exists (
+    select 1 from profiles p
+    where p.id = auth.uid() and p.role = 'admin'
+  )
+);
+
+-- Products: visibles para todos
+create policy "Anyone can view products"
+on products for select
+using (true);
+
+-- Orders: clientes solo ven los suyos
+create policy "Customers can view their own orders"
+on orders for select
+using (auth.uid() = customer_id);
+
+create policy "Customers can insert their own orders"
+on orders for insert
+with check (auth.uid() = customer_id);
+
+-- Admins pueden gestionar todo
+create policy "Admins can manage all orders"
+on orders for all
+using (
+  exists (
+    select 1 from profiles p
+    where p.id = auth.uid() and p.role = 'admin'
+  )
+);
