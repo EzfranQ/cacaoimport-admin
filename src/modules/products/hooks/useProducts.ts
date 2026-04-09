@@ -22,6 +22,7 @@ export interface Product {
   updated_by?: string | null;
   deleted_at?: string | null;
   deleted_by?: string | null;
+  qty_box?: number | null;
 }
 
 export interface CreateProductInput {
@@ -31,6 +32,7 @@ export interface CreateProductInput {
   description?: string | null;
   price: number;
   supplier_id?: string | null;
+  qty_box?: number | null;
 }
 
 export interface UpdateProductInput {
@@ -41,6 +43,7 @@ export interface UpdateProductInput {
   price?: number;
   supplier_id?: string | null;
   deleted_at?: string | null;
+  qty_box?: number | null;
 }
 
 export interface ProductsQueryParams {
@@ -84,7 +87,7 @@ export const useProducts = (params: ProductsQueryParams = {}) => {
       let query = supabase
         .from("products")
         .select(
-          `id,name,sku,product_id,description,price,supplier_id,created_at,updated_at,created_by,updated_by,deleted_at,deleted_by,
+          `id,name,sku,product_id,description,price,supplier_id,qty_box,created_at,updated_at,created_by,updated_by,deleted_at,deleted_by,
           suppliers!left(business_name)`,
           { count: "exact" }
         );
@@ -180,6 +183,7 @@ export const useCreateProduct = () => {
               input.supplier_id && input.supplier_id.trim() !== ""
                 ? input.supplier_id
                 : null,
+            qty_box: input.qty_box ?? null,
           },
         ])
         .select(

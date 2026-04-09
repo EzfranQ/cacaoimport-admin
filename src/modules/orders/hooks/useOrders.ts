@@ -297,3 +297,61 @@ export const useOrderHistory = (orderId: string) => {
     gcTime: 10 * 60 * 1000,
   });
 };
+
+export const useUpdateOrderDetails = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      items,
+      subtotal,
+      total,
+      shipping,
+    }: {
+      orderId: string;
+      items: any[];
+      subtotal: number;
+      total: number;
+      shipping: number;
+    }) => {
+      // Get current items
+      const { data: currentItems } = await supabase.from("order_items").select("id").eq("order_id", orderId);
+      const currentIds = currentItems?.map((i) => i.id) || [];
+      const newIds = items.filter((i) => i.id).map((i) => i.id);
+      
+      const idsToDelete = currentIds.filter((id) => !newIds.includes(id));
+      if (idsToDelete.length > 0) {
+        await supabase.from("order_items").delete().in("id", idsToDelete);
+      }
+      
+      // Upsert new/updated items
+      const itemsToUpsert = items.map((it) => ({
+        ...(it.id ? { id: it.id } : {}),
+        order_id: orderId,
+        product_id: it.product_id,
+        name: it.name ?? it.product_name ?? "-",
+        product_name: it.name ?? it.product_name ?? "-", // maintain compatibility
+        sku: it.sku ?? it.product_sku ?? "-",
+        quantity: typeof it.quantity === "string" ? parseInt(it.quantity) : it.quantity,
+        unit_price: typeof it.unit_price === "string" ? parseFloat(it.unit_price) : (it.unit_price ?? it.price ?? 0),
+        price: typeof it.unit_price === "string" ? parseFloat(it.unit_price) : (it.unit_price ?? it.price ?? 0), // fallback
+      }));
+
+      if (itemsToUpsert.length > 0) {
+        const { error: itemsErr } = await supabase.from("order_items").upsert(itemsToUpsert);
+        if (itemsErr) throw new Error("Error updating items: " + itemsErr.message);
+      }
+
+      // Update totals
+      const { error: orderErr } = await supabase.from("orders").update({ subtotal, total, shipping }).eq("id", orderId);
+      if (orderErr) throw new Error("Error updating order totals: " + orderErr.message);
+
+      return true;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders", variables.orderId] });
+    },
+  });
+};
