@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
 import { AuthTemplate } from "@/modules/auth";
 import { LoginForm } from "@/modules/auth/pages/login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import AdminLayout from "@/shared/layout/adminLayout";
 import { ProductsListPage } from "@/modules/products/pages/ProductsList";
 import { ProductsFormPage } from "@/modules/products/pages/ProductsForm";
@@ -18,10 +19,12 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: <Navigate to="/admin" />,
+    errorElement: <GlobalErrorBoundary />,
   },
   {
     path: "/auth",
     element: <AuthTemplate />,
+    errorElement: <GlobalErrorBoundary />,
     children: [
       {
         index: true,
@@ -33,6 +36,7 @@ export const router = createBrowserRouter([
   {
     path: "/admin",
     element: <ProtectedRoute/>,
+    errorElement: <GlobalErrorBoundary />,
     children: [
       {
         path: "",
