@@ -15,20 +15,10 @@ export const BillingPage = () => {
   const [address2, setAddress2] = useState("");
   const [department, setDepartment] = useState("");
   const [phone, setPhone] = useState("");
-  
-  const [items, setItems] = useState<any[]>([]);
-  
-  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
-  const [seller, setSeller] = useState<string | undefined>(undefined);
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => setLogoDataUrl(event.target?.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
+  const [items, setItems] = useState<any[]>([]);
+
+  const [seller, setSeller] = useState<string | undefined>(undefined);
 
   const handleAddItem = () => {
     setItems([...items, { id: Date.now().toString(), name: "", sku: "", price: 0, quantity: 1 }]);
@@ -75,12 +65,13 @@ export const BillingPage = () => {
       },
       items: items.map(it => ({
         name: it.name || "Artículo sin nombre",
+        sku: it.sku || undefined,
         quantity: it.quantity,
         unit_price: it.price,
       }))
     };
 
-    generateInvoicePDF(orderMock, logoDataUrl, seller);
+    generateInvoicePDF(orderMock, seller);
   };
 
   return (
@@ -90,24 +81,12 @@ export const BillingPage = () => {
           Facturación Manual
         </h1>
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <input
-              type="file"
-              accept="image/*"
-              title="Subir Logo (Opcional)"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              onChange={handleLogoUpload}
-            />
-            <Button variant="outline" className="pointer-events-none flex items-center gap-2 text-xs h-9">
-              {logoDataUrl ? "Logo (OK)" : "Subir Logo"}
-            </Button>
-          </div>
           <Select value={seller} onValueChange={setSeller}>
             <SelectTrigger className="w-[120px] h-9">
               <SelectValue placeholder="Vendedor" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="3">3</SelectItem>
+              <SelectItem value="Axel">Axel</SelectItem>
               <SelectItem value="Evenio">Evenio</SelectItem>
               <SelectItem value="Kevin">Kevin</SelectItem>
             </SelectContent>

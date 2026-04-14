@@ -1,18 +1,37 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-export const generateInvoicePDF = (order: any, logoBase64?: string | null, sellerName?: string) => {
+export const generateInvoicePDF = async (order: any, sellerName?: string) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  // ----- HEADER -----
-  if (logoBase64) {
-    // Determine format from base64 string
-    const formatMatch = logoBase64.match(/data:image\/(.*?);base64,/);
-    const format = formatMatch ? formatMatch[1].toUpperCase() : 'PNG';
-    // Add image. (x, y, width, height)
-    doc.addImage(logoBase64, format, 14, 15, 40, 20, undefined, 'FAST');
+  // ----- LOGO -----
+  // Use a CORS proxy so the image always loads regardless of origin server headers
+  try {
+    const proxyUrl = "https://images.weserv.nl/?url=cacaoimport.com/loog.png&output=png";
+    const response = await fetch(proxyUrl);
+    if (response.ok) {
+      const blob = await response.blob();
+      const base64data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      // Preserve aspect ratio: fix width at 36mm, calculate height proportionally
+      const imgElement = await new Promise<HTMLImageElement>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.src = base64data;
+      });
+      const targetW = 36;
+      const targetH = (imgElement.naturalHeight / imgElement.naturalWidth) * targetW;
+      doc.addImage(base64data, "PNG", 14, 10, targetW, targetH, undefined, "FAST");
+    }
+  } catch (err) {
+    console.error("Error al cargar el logo:", err);
   }
+
 
   // "Cotización" text, top right
   doc.setFontSize(28);
@@ -85,12 +104,14 @@ export const generateInvoicePDF = (order: any, logoBase64?: string | null, selle
   const items = order.items ?? [];
   items.forEach((item: any) => {
     const name = item.name ?? item.product_name ?? item.product?.name ?? item.product_id ?? "-";
+    const code = item.code ?? item.sku ?? item.product?.code ?? item.product?.sku ?? null;
+    const displayName = code ? `${name} [${code}]` : name;
     const quantity = item.quantity ?? 1;
     const price = item.unit_price ?? item.sale_price ?? item.price ?? 0;
     const subtotal = price * quantity;
 
     tableRows.push([
-      name,
+      displayName,
       quantity.toString(),
       `$${Number(price).toFixed(2)}`,
       `$${Number(subtotal).toFixed(2)}`

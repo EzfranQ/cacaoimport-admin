@@ -1,56 +1,60 @@
-import { GalleryVerticalEnd, SquareTerminal } from "lucide-react";
+import { Store, Tags, SlidersHorizontal, Scale, Package, Truck, ShoppingCart, Receipt, Users } from "lucide-react";
 
 export const data = {
   teams: [
     {
       name: "Cacao Import",
-      logo: GalleryVerticalEnd,
+      logo: Store,
       plan: "Plataforma administrativa",
     },
   ],
   navMain: [
-
     {
       title: "Categorías",
       url: "/admin/categories",
-      icon: SquareTerminal,
+      icon: Tags,
       isActive: true,
     },
     {
       title: "Atributos",
       url: "/admin/attributes",
-      icon: SquareTerminal,
+      icon: SlidersHorizontal,
       isActive: false,
     },
     {
       title: "Unidades",
       url: "/admin/units",
-      icon: SquareTerminal,
+      icon: Scale,
       isActive: false,
     },
     {
       title: "Productos",
       url: "/admin/products",
-      icon: SquareTerminal,
+      icon: Package,
       isActive: false,
     },
     {
       title: "Proveedores",
       url: "/admin/suppliers",
-      icon: SquareTerminal,
+      icon: Truck,
       isActive: false,
-    }
-    ,
+    },
     {
       title: "Órdenes",
       url: "/admin/orders",
-      icon: SquareTerminal,
+      icon: ShoppingCart,
       isActive: false,
     },
     {
       title: "Facturación",
       url: "/admin/billing",
-      icon: SquareTerminal,
+      icon: Receipt,
+      isActive: false,
+    },
+    {
+      title: "Usuarios",
+      url: "/admin/users",
+      icon: Users,
       isActive: false,
     }
   ],

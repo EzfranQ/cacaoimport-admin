@@ -27,17 +27,7 @@ export const OrderDetailPage = () => {
   const [showProof, setShowProof] = useState(false);
   const [proofError, setProofError] = useState(false);
 
-  // Logo upload state
-  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
-
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => setLogoDataUrl(event.target?.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
+  // Logo is hardcoded in pdf.ts
 
   // Seller selection for PDF
   const [seller, setSeller] = useState<string | undefined>(undefined);
@@ -159,18 +149,6 @@ export const OrderDetailPage = () => {
           Orden {order.id}
         </h1>
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <input
-              type="file"
-              accept="image/*"
-              title="Subir Logo (Opcional)"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              onChange={handleLogoUpload}
-            />
-            <Button variant="outline" className="pointer-events-none flex items-center gap-2 text-xs h-9">
-              {logoDataUrl ? "Logo (OK)" : "Subir Logo"}
-            </Button>
-          </div>
           <div className="flex items-center gap-2">
             <Select value={seller} onValueChange={setSeller}>
               <SelectTrigger className="w-[120px] h-9">
@@ -182,7 +160,7 @@ export const OrderDetailPage = () => {
                 <SelectItem value="Axel">Axel</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={() => generateInvoicePDF(order, logoDataUrl, seller)} className="flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
+            <Button variant="outline" onClick={() => generateInvoicePDF(order, seller)} className="flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
               <Download size={16} /> PDF
             </Button>
           </div>

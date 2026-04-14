@@ -1,5 +1,5 @@
 import { ChevronRight, type LucideIcon } from "lucide-react"
-import { NavLink } from "react-router"
+import { Link, useLocation } from "react-router"
 
 import {
   Collapsible,
@@ -31,69 +31,92 @@ export function NavMain({
     }[]
   }[]
 }) {
+  const location = useLocation();
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Menú de administración</SidebarGroupLabel>
+
       <SidebarMenu>
         {items.map((item) => {
-          // Si el item no tiene subitems, renderizar como NavLink directo
+          const isActive = location.pathname.startsWith(item.url);
+
           if (!item.items || item.items.length === 0) {
             return (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild tooltip={item.title}>
-                  <NavLink 
+                <SidebarMenuButton
+                  asChild
+                  tooltip={item.title}
+                  isActive={isActive}
+                  size="lg"
+                >
+                  <Link
                     to={item.url}
-                    className={({ isActive }) => 
-                      isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
+                    className={
+                      isActive
+                        ? "!bg-primary !text-primary-foreground shadow-sm font-medium [&>svg]:size-5"
+                        : "text-foreground dark:text-foreground [&>svg]:size-5"
                     }
                   >
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
-                  </NavLink>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )
           }
 
-          // Si el item tiene subitems, renderizar como Collapsible
           return (
             <Collapsible
               key={item.title}
               asChild
-              defaultOpen={item.isActive}
+              defaultOpen={item.isActive || isActive}
               className="group/collapsible"
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <NavLink 
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    isActive={isActive}
+                  >
+                    <Link
                       to={item.url}
-                      className={({ isActive }) => 
-                        `flex items-center w-full ${isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`
+                      className={
+                        isActive
+                          ? "!bg-primary !text-primary-foreground shadow-sm font-medium flex items-center w-full"
+                          : "text-foreground dark:text-foreground flex items-center w-full"
                       }
                     >
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                    </NavLink>
+                    </Link>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    {item.items.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton asChild>
-                          <NavLink 
-                            to={subItem.url}
-                            className={({ isActive }) => 
-                              isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
-                            }
+                    {item.items.map((subItem) => {
+                      const isSubActive = location.pathname === subItem.url;
+                      return (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={isSubActive}
                           >
-                            <span>{subItem.title}</span>
-                          </NavLink>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
+                            <Link
+                              to={subItem.url}
+                              className={
+                                isSubActive
+                                  ? "!bg-primary/90 !text-primary-foreground shadow-sm font-medium"
+                                  : "text-foreground dark:text-foreground"
+                              }
+                            >
+                              <span>{subItem.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      )
+                    })}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </SidebarMenuItem>

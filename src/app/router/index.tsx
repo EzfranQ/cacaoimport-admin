@@ -14,6 +14,7 @@ import { UnitsListPage } from "@/modules/product-attributes/pages/UnitsList";
 import { UnitsFormPage } from "@/modules/product-attributes/pages/UnitsForm";
 import { OrdersListPage } from "@/modules/orders/pages/OrdersList";
 import { SuppliersListPage, SuppliersFormPage } from "@/modules/suppliers";
+import { UsersListPage } from "@/modules/users/pages/UsersList";
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
         path: "",
         element: <AdminLayout />,
         children: [
+          {
+            index: true,
+            element: <Navigate to="/admin/orders" replace />
+          },
           {
             path: 'categories',
             element: <CategoriesListPage />,
@@ -133,6 +138,10 @@ export const router = createBrowserRouter([
                 },
               },
             ],
+          },
+          {
+            path: "users",
+            element: <UsersListPage />,
           },
           {
             path: "billing",
