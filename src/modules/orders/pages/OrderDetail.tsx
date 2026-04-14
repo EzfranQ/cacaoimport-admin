@@ -177,9 +177,9 @@ export const OrderDetailPage = () => {
                 <SelectValue placeholder="Vendedor" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="3">3</SelectItem>
                 <SelectItem value="Evenio">Evenio</SelectItem>
-                <SelectItem value="Kevin">Kevin</SelectItem>
+                <SelectItem value="Alejandro">Alejandro</SelectItem>
+                <SelectItem value="Axel">Axel</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={() => generateInvoicePDF(order, logoDataUrl, seller)} className="flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
