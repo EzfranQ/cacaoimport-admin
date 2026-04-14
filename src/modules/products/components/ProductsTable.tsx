@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/shared/components/ui/button";
 import { Table } from "@/shared/components/ui/table";
-import { useProducts, useDeleteProduct, useRestoreProduct } from "../hooks/useProducts";
+import { useProducts, useDeleteProduct, useRestoreProduct, useUpdateProduct } from "../hooks/useProducts";
 import { usePrimaryProductImage, useDeleteProductImage, useUploadProductImages } from "../hooks/useProductImages";
 import { toast } from "sonner";
 
@@ -89,7 +89,7 @@ export default function ProductsTable() {
                   <td className="p-2">{p.name}</td>
                   <td className="p-2">{p.sku || "-"}</td>
                   <td className="p-2">{p.supplier_name || "-"}</td>
-                  <td className="p-2 text-center">{p.qty_box || "-"}</td>
+                  <td className="p-2 text-center"><QtyBoxCell productId={p.id} value={p.qty_box ?? null} /></td>
                   <td className="p-2">{Number(p.price).toFixed(2)}</td>
                   <td className="p-2 flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => onEdit(p.id)}>Editar</Button>
@@ -112,6 +112,61 @@ export default function ProductsTable() {
         <Button variant="outline" disabled={!data?.hasNextPage} onClick={() => setPage((p) => p + 1)}>Siguiente</Button>
       </div>
     </div>
+  );
+}
+
+/**
+ * Celda inline editable para qty_box
+ */
+function QtyBoxCell({ productId, value }: { productId: string; value: number | null }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const updateMutation = useUpdateProduct();
+
+  const startEdit = () => {
+    setDraft(value != null ? String(value) : "");
+    setEditing(true);
+  };
+
+  const save = async () => {
+    setEditing(false);
+    const newVal = draft.trim() === "" ? null : Number(draft);
+    if (newVal === value) return;
+    try {
+      await updateMutation.mutateAsync({ id: productId, updates: { qty_box: newVal ?? undefined } });
+      toast.success("Cantidad actualizada");
+    } catch (err: any) {
+      toast.error(err.message || "Error al guardar");
+    }
+  };
+
+  if (editing) {
+    return (
+      <input
+        type="number"
+        min="0"
+        autoFocus
+        className="w-16 border rounded px-1 py-0.5 text-center text-sm"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+          if (e.key === "Escape") setEditing(false);
+        }}
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      title="Click para editar cantidad por caja"
+      className="min-w-[2rem] px-1 py-0.5 rounded hover:bg-slate-100 transition-colors text-sm font-medium text-slate-700 cursor-pointer"
+      onClick={startEdit}
+    >
+      {value != null ? value : <span className="text-muted-foreground">-</span>}
+    </button>
   );
 }
 
