@@ -12,6 +12,8 @@ import HistoryDialog from "../components/HistoryDialog";
 import PaymentProofDialog from "../components/PaymentProofDialog";
 import { generateInvoicePDF } from "../utils/pdf";
 import { Download, Edit, Save, X, Trash2 } from "lucide-react";
+import { ProductSearchInput } from "../components/ProductSearchInput";
+import type { Product } from "@/modules/products/hooks/useProducts";
 
 export const OrderDetailPage = () => {
   const { id } = useParams();
@@ -36,6 +38,9 @@ export const OrderDetailPage = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  // Seller selection for PDF
+  const [seller, setSeller] = useState<string | undefined>(undefined);
 
   // Edit states
   const [isEditing, setIsEditing] = useState(false);
@@ -118,6 +123,19 @@ export const OrderDetailPage = () => {
     setEditedItems(editedItems.filter(it => it.id !== itemId));
   };
 
+  const handleAddProductFromSearch = (product: Product) => {
+    setEditedItems(prev => [
+      ...prev,
+      {
+        id: `new-${Date.now()}`,
+        name: product.name,
+        sku: product.sku ?? "",
+        unit_price: Number(product.price),
+        quantity: 1,
+      },
+    ]);
+  };
+
   const handleSaveDetails = async () => {
     try {
       await updateOrderDetails.mutateAsync({
@@ -153,9 +171,21 @@ export const OrderDetailPage = () => {
               {logoDataUrl ? "Logo (OK)" : "Subir Logo"}
             </Button>
           </div>
-          <Button variant="outline" onClick={() => generateInvoicePDF(order, logoDataUrl)} className="flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
-            <Download size={16} /> PDF
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select value={seller} onValueChange={setSeller}>
+              <SelectTrigger className="w-[120px] h-9">
+                <SelectValue placeholder="Vendedor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="3">3</SelectItem>
+                <SelectItem value="Evenio">Evenio</SelectItem>
+                <SelectItem value="Kevin">Kevin</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={() => generateInvoicePDF(order, logoDataUrl, seller)} className="flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
+              <Download size={16} /> PDF
+            </Button>
+          </div>
           <Link to="/admin/orders">
             <Button variant="outline">Volver al listado</Button>
           </Link>
@@ -313,6 +343,11 @@ export const OrderDetailPage = () => {
             </div>
           )}
         </div>
+        {isEditing && (
+          <div className="max-w-md">
+            <ProductSearchInput onSelect={handleAddProductFromSearch} />
+          </div>
+        )}
 
         <div className="border rounded shadow-sm overflow-hidden bg-white">
           <Table>

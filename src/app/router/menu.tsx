@@ -46,6 +46,12 @@ export const data = {
       url: "/admin/orders",
       icon: SquareTerminal,
       isActive: false,
+    },
+    {
+      title: "Facturación",
+      url: "/admin/billing",
+      icon: SquareTerminal,
+      isActive: false,
     }
   ],
 }

@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-export const generateInvoicePDF = (order: any, logoBase64?: string | null) => {
+export const generateInvoicePDF = (order: any, logoBase64?: string | null, sellerName?: string) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -152,11 +152,11 @@ export const generateInvoicePDF = (order: any, logoBase64?: string | null) => {
   doc.text(`$${Number(order.subtotal ?? 0).toFixed(2)}`, valuesX, currentY, { align: "right" });
 
   // Shipping / Tax
-  currentY += 7;
-  doc.setTextColor(100, 100, 100);
-  doc.text("Envío:", totalsX, currentY, { align: "right" });
-  doc.setTextColor(33, 43, 54);
-  doc.text(`$${Number(order.shipping ?? 0).toFixed(2)}`, valuesX, currentY, { align: "right" });
+  // currentY += 7;
+  // doc.setTextColor(100, 100, 100);
+  // doc.text("Envío:", totalsX, currentY, { align: "right" });
+  // doc.setTextColor(33, 43, 54);
+  // doc.text(`$${Number(order.shipping ?? 0).toFixed(2)}`, valuesX, currentY, { align: "right" });
 
   // Total
   currentY += 10;
@@ -166,13 +166,15 @@ export const generateInvoicePDF = (order: any, logoBase64?: string | null) => {
   doc.setTextColor(33, 43, 54);
   doc.text(`$${total}`, valuesX, currentY, { align: "right" });
 
-  // ----- NOTES / TERMS (Bottom left) -----
+  // ----- SELLER / NOTES (Bottom left) -----
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(100, 100, 100);
-  doc.text("Notas:", 14, currentY - 5);
-  doc.setTextColor(33, 43, 54);
-  doc.text("Gracias por su compra.", 14, currentY);
+  if (sellerName) {
+    doc.setTextColor(100, 100, 100);
+    doc.text("Vendedor:", 14, currentY - 5);
+    doc.setTextColor(33, 43, 54);
+    doc.text(sellerName, 14, currentY);
+  }
 
   // Download
   doc.save(`Cotizacion_${order.id}.pdf`);

@@ -325,7 +325,6 @@ export const useUpdateOrderDetails = () => {
         await supabase.from("order_items").delete().in("id", idsToDelete);
       }
       
-      // Upsert new/updated items
       const itemsToUpsert = items.map((it) => ({
         ...(it.id ? { id: it.id } : {}),
         order_id: orderId,
@@ -335,7 +334,6 @@ export const useUpdateOrderDetails = () => {
         sku: it.sku ?? it.product_sku ?? "-",
         quantity: typeof it.quantity === "string" ? parseInt(it.quantity) : it.quantity,
         unit_price: typeof it.unit_price === "string" ? parseFloat(it.unit_price) : (it.unit_price ?? it.price ?? 0),
-        price: typeof it.unit_price === "string" ? parseFloat(it.unit_price) : (it.unit_price ?? it.price ?? 0), // fallback
       }));
 
       if (itemsToUpsert.length > 0) {

@@ -134,6 +134,13 @@ export const router = createBrowserRouter([
               },
             ],
           },
+          {
+            path: "billing",
+            lazy: async () => {
+              const mod = await import("@/modules/billing/pages/BillingPage");
+              return { Component: mod.BillingPage };
+            },
+          },
         ],
       },
     ],
