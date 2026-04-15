@@ -345,6 +345,7 @@ export const useUpdateOrderDetails = () => {
       if (newItems.length > 0) {
         const toInsert = newItems.map((it) => ({
           order_id: orderId,
+          item_id: it.item_id ?? it.product_id ?? it.id, 
           name: it.name ?? it.product_name ?? "-",
           sku: it.sku ?? it.product_sku ?? "-",
           quantity: typeof it.quantity === "string" ? parseInt(it.quantity) : it.quantity,
