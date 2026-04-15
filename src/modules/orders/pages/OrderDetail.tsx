@@ -118,6 +118,7 @@ export const OrderDetailPage = () => {
       ...prev,
       {
         id: `new-${Date.now()}`,
+        item_id: product.id,
         name: product.name,
         sku: product.sku ?? "",
         unit_price: Number(product.price),

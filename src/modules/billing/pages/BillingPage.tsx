@@ -17,8 +17,17 @@ export const BillingPage = () => {
   const [phone, setPhone] = useState("");
 
   const [items, setItems] = useState<any[]>([]);
-
   const [seller, setSeller] = useState<string | undefined>(undefined);
+  const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
+  const [delivered, setDelivered] = useState(false);
+
+  const PAYMENT_OPTIONS = ["Efectivo", "Transferencia", "Crédito"];
+
+  const togglePaymentMethod = (method: string) => {
+    setPaymentMethods(prev =>
+      prev.includes(method) ? prev.filter(m => m !== method) : [...prev, method]
+    );
+  };
 
   const handleAddItem = () => {
     setItems([...items, { id: Date.now().toString(), name: "", sku: "", price: 0, quantity: 1 }]);
@@ -71,7 +80,7 @@ export const BillingPage = () => {
       }))
     };
 
-    generateInvoicePDF(orderMock, seller);
+    generateInvoicePDF(orderMock, seller, paymentMethods, delivered);
   };
 
   return (
@@ -134,6 +143,41 @@ export const BillingPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Forma de Cobro y Entrega</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Método de pago</label>
+            <div className="flex gap-4 flex-wrap">
+              {PAYMENT_OPTIONS.map((method) => (
+                <label key={method} className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={paymentMethods.includes(method)}
+                    onChange={() => togglePaymentMethod(method)}
+                    className="w-4 h-4"
+                  />
+                  {method}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={delivered}
+                onChange={(e) => setDelivered(e.target.checked)}
+                className="w-4 h-4"
+              />
+              Marcar como Entregado
+            </label>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

@@ -326,11 +326,10 @@ export const useUpdateOrderDetails = () => {
       }
       
       const itemsToUpsert = items.map((it) => ({
-        ...(it.id ? { id: it.id } : {}),
+        ...(it.id && !String(it.id).startsWith('new-') ? { id: it.id } : {}),
+        item_id: it.item_id,
         order_id: orderId,
-        product_id: it.product_id,
         name: it.name ?? it.product_name ?? "-",
-        product_name: it.name ?? it.product_name ?? "-", // maintain compatibility
         sku: it.sku ?? it.product_sku ?? "-",
         quantity: typeof it.quantity === "string" ? parseInt(it.quantity) : it.quantity,
         unit_price: typeof it.unit_price === "string" ? parseFloat(it.unit_price) : (it.unit_price ?? it.price ?? 0),

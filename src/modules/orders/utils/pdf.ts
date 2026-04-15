@@ -1,7 +1,12 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-export const generateInvoicePDF = async (order: any, sellerName?: string) => {
+export const generateInvoicePDF = async (
+  order: any,
+  sellerName?: string,
+  paymentMethods?: string[],
+  delivered?: boolean
+) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -32,6 +37,19 @@ export const generateInvoicePDF = async (order: any, sellerName?: string) => {
     console.error("Error al cargar el logo:", err);
   }
 
+  // Payment Options text, top center
+  const middleX = pageWidth / 2 + 10;
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(100, 100, 100);
+  doc.text("Formas de pago:", middleX, 15, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.text("EFECTIVO", middleX, 20, { align: "right" });
+  doc.text("TRANSFERENCIA", middleX, 25, { align: "right" });
+  doc.text("CREDITO", middleX, 30, { align: "right" });
+
+  doc.setFont("helvetica", "bold");
+  doc.text("ENTREGADO", middleX, 40, { align: "right" });
 
   // "Cotización" text, top right
   doc.setFontSize(28);
@@ -190,11 +208,35 @@ export const generateInvoicePDF = async (order: any, sellerName?: string) => {
   // ----- SELLER / NOTES (Bottom left) -----
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
+  let leftY = currentY - 5;
   if (sellerName) {
     doc.setTextColor(100, 100, 100);
-    doc.text("Vendedor:", 14, currentY - 5);
+    doc.text("Vendedor:", 14, leftY);
+    leftY += 5;
     doc.setTextColor(33, 43, 54);
-    doc.text(sellerName, 14, currentY);
+    doc.text(sellerName, 14, leftY);
+    leftY += 10;
+  }
+
+  // Payment methods
+  if (paymentMethods && paymentMethods.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(200, 0, 0);
+    doc.text("FORMA DE COBRO", 14, leftY);
+    leftY += 6;
+    doc.setFont("helvetica", "normal");
+    paymentMethods.forEach((method) => {
+      doc.text(method.toUpperCase(), 14, leftY);
+      leftY += 5;
+    });
+    leftY += 3;
+  }
+
+  // Delivered status
+  if (delivered) {
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(200, 0, 0);
+    doc.text("ENTREGADO", 14, leftY);
   }
 
   // Download
