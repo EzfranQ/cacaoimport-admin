@@ -315,29 +315,43 @@ export const useUpdateOrderDetails = () => {
       total: number;
       shipping: number;
     }) => {
-      // Get current items
+      // Get current items from DB
       const { data: currentItems } = await supabase.from("order_items").select("id").eq("order_id", orderId);
       const currentIds = currentItems?.map((i) => i.id) || [];
-      const newIds = items.filter((i) => i.id).map((i) => i.id);
-      
-      const idsToDelete = currentIds.filter((id) => !newIds.includes(id));
+
+      // Separate existing vs new items
+      const existingItems = items.filter((it) => it.id && !String(it.id).startsWith('new-'));
+      const newItems = items.filter((it) => !it.id || String(it.id).startsWith('new-'));
+
+      // Delete items that were removed
+      const keptIds = existingItems.map((it) => it.id);
+      const idsToDelete = currentIds.filter((id) => !keptIds.includes(id));
       if (idsToDelete.length > 0) {
         await supabase.from("order_items").delete().in("id", idsToDelete);
       }
-      
-      const itemsToUpsert = items.map((it) => ({
-        ...(it.id && !String(it.id).startsWith('new-') ? { id: it.id } : {}),
-        item_id: it.item_id,
-        order_id: orderId,
-        name: it.name ?? it.product_name ?? "-",
-        sku: it.sku ?? it.product_sku ?? "-",
-        quantity: typeof it.quantity === "string" ? parseInt(it.quantity) : it.quantity,
-        unit_price: typeof it.unit_price === "string" ? parseFloat(it.unit_price) : (it.unit_price ?? it.price ?? 0),
-      }));
 
-      if (itemsToUpsert.length > 0) {
-        const { error: itemsErr } = await supabase.from("order_items").upsert(itemsToUpsert);
-        if (itemsErr) throw new Error("Error updating items: " + itemsErr.message);
+      // Update existing items
+      for (const it of existingItems) {
+        const { error: updateErr } = await supabase.from("order_items").update({
+          name: it.name ?? it.product_name ?? "-",
+          sku: it.sku ?? it.product_sku ?? "-",
+          quantity: typeof it.quantity === "string" ? parseInt(it.quantity) : it.quantity,
+          unit_price: typeof it.unit_price === "string" ? parseFloat(it.unit_price) : (it.unit_price ?? it.price ?? 0),
+        }).eq("id", it.id);
+        if (updateErr) throw new Error("Error updating items: " + updateErr.message);
+      }
+
+      // Insert new items (no id — let DB generate it)
+      if (newItems.length > 0) {
+        const toInsert = newItems.map((it) => ({
+          order_id: orderId,
+          name: it.name ?? it.product_name ?? "-",
+          sku: it.sku ?? it.product_sku ?? "-",
+          quantity: typeof it.quantity === "string" ? parseInt(it.quantity) : it.quantity,
+          unit_price: typeof it.unit_price === "string" ? parseFloat(it.unit_price) : (it.unit_price ?? it.price ?? 0),
+        }));
+        const { error: insertErr } = await supabase.from("order_items").insert(toInsert);
+        if (insertErr) throw new Error("Error updating items: " + insertErr.message);
       }
 
       // Update totals
