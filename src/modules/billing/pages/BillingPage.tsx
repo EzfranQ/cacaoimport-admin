@@ -97,7 +97,7 @@ export const BillingPage = () => {
             <SelectContent>
               <SelectItem value="Axel">Axel</SelectItem>
               <SelectItem value="Evenio">Evenio</SelectItem>
-              <SelectItem value="Kevin">Kevin</SelectItem>
+              <SelectItem value="Alejandro">Alejandro</SelectItem>
             </SelectContent>
           </Select>
           <Button onClick={handleGeneratePDF} className="flex items-center gap-2 h-9" disabled={items.length === 0}>
