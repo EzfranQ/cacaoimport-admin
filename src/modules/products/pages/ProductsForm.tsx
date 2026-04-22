@@ -615,6 +615,7 @@ export const ProductsFormPage = () => {
               <FormItem>
                 <FormLabel>Proveedor (opcional)</FormLabel>
                 <Select
+                  key={isLoadingSuppliers ? "loading" : (field.value ?? "none")}
                   onValueChange={(v) => field.onChange(v === "none" ? null : v)}
                   value={field.value || "none"}
                   disabled={isLoadingSuppliers}
