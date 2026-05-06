@@ -148,7 +148,7 @@ export const useProduct = (id: string) => {
       const { data, error } = await supabase
         .from("products")
         .select(
-          "id,name,sku,product_id,description,price,supplier_id,created_at,updated_at,created_by,updated_by,deleted_at,deleted_by"
+          "id,name,sku,product_id,description,price,supplier_id,qty_box,created_at,updated_at,created_by,updated_by,deleted_at,deleted_by"
         )
         .eq("id", id)
         .single();
