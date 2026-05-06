@@ -1,6 +1,16 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+const sanitizeText = (text: string): string =>
+  text
+    .replace(/ /g, " ")
+    .replace(/[​-‏﻿­]/g, "")
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/–/g, "-")
+    .replace(/—/g, "--")
+    .replace(/[^\x00-\xFF]/g, "");
+
 export const generateInvoicePDF = async (
   order: any,
   sellerName?: string,
@@ -37,19 +47,28 @@ export const generateInvoicePDF = async (
     console.error("Error al cargar el logo:", err);
   }
 
-  // Payment Options text, top center
+  // Payment Options text, top center (only if provided)
   const middleX = pageWidth / 2 + 10;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(100, 100, 100);
-  doc.text("Formas de pago:", middleX, 15, { align: "right" });
-  doc.setFont("helvetica", "normal");
-  doc.text("EFECTIVO", middleX, 20, { align: "right" });
-  doc.text("TRANSFERENCIA", middleX, 25, { align: "right" });
-  doc.text("CREDITO", middleX, 30, { align: "right" });
-
-  doc.setFont("helvetica", "bold");
-  doc.text("ENTREGADO", middleX, 40, { align: "right" });
+  if ((paymentMethods && paymentMethods.length > 0) || delivered) {
+    doc.setFontSize(10);
+    doc.setTextColor(33, 43, 54);
+    let topY = 15;
+    if (paymentMethods && paymentMethods.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Formas de pago:", middleX, topY, { align: "right" });
+      topY += 5;
+      doc.setFont("helvetica", "normal");
+      paymentMethods.forEach((method) => {
+        doc.text(method.toUpperCase(), middleX, topY, { align: "right" });
+        topY += 5;
+      });
+      topY += 2;
+    }
+    if (delivered) {
+      doc.setFont("helvetica", "bold");
+      doc.text("ENTREGADO", middleX, topY, { align: "right" });
+    }
+  }
 
   // "Cotización" text, top right
   doc.setFontSize(28);
@@ -123,7 +142,7 @@ export const generateInvoicePDF = async (
   items.forEach((item: any) => {
     const name = item.name ?? item.product_name ?? item.product?.name ?? item.product_id ?? "-";
     const code = item.code ?? item.sku ?? item.product?.code ?? item.product?.sku ?? null;
-    const displayName = code ? `${name} [${code}]` : name;
+    const displayName = sanitizeText(code ? `${name} [${code}]` : name);
     const quantity = item.quantity ?? 1;
     const price = item.unit_price ?? item.sale_price ?? item.price ?? 0;
     const subtotal = price * quantity;
@@ -216,27 +235,6 @@ export const generateInvoicePDF = async (
     doc.setTextColor(33, 43, 54);
     doc.text(sellerName, 14, leftY);
     leftY += 10;
-  }
-
-  // Payment methods
-  if (paymentMethods && paymentMethods.length > 0) {
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(200, 0, 0);
-    doc.text("FORMA DE COBRO", 14, leftY);
-    leftY += 6;
-    doc.setFont("helvetica", "normal");
-    paymentMethods.forEach((method) => {
-      doc.text(method.toUpperCase(), 14, leftY);
-      leftY += 5;
-    });
-    leftY += 3;
-  }
-
-  // Delivered status
-  if (delivered) {
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(200, 0, 0);
-    doc.text("ENTREGADO", 14, leftY);
   }
 
   // Download
