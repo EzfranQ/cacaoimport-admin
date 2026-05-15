@@ -197,10 +197,6 @@ export const ProductsFormPage = () => {
   // Si el producto actual tiene proveedor que no aparece en la lista (posiblemente inactivo), lo traemos para ofrecerlo como opción
   const { data: currentSupplier } = useSupplier(product?.supplier_id || "");
 
-  // Debug logs temporales
-  console.log("Suppliers result:", suppliersResult);
-  console.log("Is loading suppliers:", isLoadingSuppliers);
-
   const supplierOptions = (suppliersResult ?? []).map((s) => ({
     value: s.id,
     label: s.business_name,
@@ -218,7 +214,6 @@ export const ProductsFormPage = () => {
     });
   }
 
-  console.log("Supplier options:", supplierOptions);
 
   // Si estamos editando, cargar categorías asociadas al producto
   const { data: linkedCategoriesResult } = useProductCategories(id || "");
@@ -277,21 +272,7 @@ export const ProductsFormPage = () => {
   const prevResetPayloadRef = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
-    // Resetear apenas tengamos el producto (SIN esperar a que carguen los proveedores)
-    // Esto evita que el campo de proveedor quede sin valor seleccionado al entrar a editar.
     if (!isEditing || !product) return;
-
-    console.log('🔄 ProductsForm: Resetting form with product data:', {
-      productId: product.id,
-      productName: product.name,
-      supplierIdFromProduct: product.supplier_id,
-      supplierIdType: typeof product.supplier_id,
-      suppliersLoaded: !isLoadingSuppliers,
-      supplierOptionsCount: supplierOptions.length,
-      availableSupplierIds: supplierOptions.map(opt => ({ value: opt.value, label: opt.label, type: typeof opt.value })),
-      linkedCategoryIds,
-      linkedAttributeIds
-    });
 
     const resetPayloadObj: ProductFormData = {
       name: product.name,
@@ -315,25 +296,11 @@ export const ProductsFormPage = () => {
       })) ?? [],
     };
 
-    console.log('📝 ProductsForm: Reset payload supplier_id:', resetPayloadObj.supplier_id);
-
     const resetPayload = JSON.stringify(resetPayloadObj);
     if (resetPayload === prevResetPayloadRef.current) return;
     prevResetPayloadRef.current = resetPayload;
 
     form.reset(resetPayloadObj);
-
-    // Verificar que el valor se estableció correctamente
-    setTimeout(() => {
-      const currentSupplierValue = form.getValues('supplier_id');
-      const matchingOption = supplierOptions.find(opt => opt.value === currentSupplierValue);
-      console.log('✅ ProductsForm: Supplier value after reset:', {
-        currentValue: currentSupplierValue,
-        currentValueType: typeof currentSupplierValue,
-        matchingOption: matchingOption,
-        allOptions: supplierOptions.map(opt => ({ value: opt.value, label: opt.label }))
-      });
-    }, 100);
   }, [
     form,
     isEditing,

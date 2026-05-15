@@ -160,7 +160,7 @@ export const useProduct = (id: string) => {
       return data as Product;
     },
     enabled: !!id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     gcTime: 10 * 60 * 1000,
   });
 };
