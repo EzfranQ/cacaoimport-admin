@@ -15,6 +15,14 @@ import { UnitsFormPage } from "@/modules/product-attributes/pages/UnitsForm";
 import { OrdersListPage } from "@/modules/orders/pages/OrdersList";
 import { SuppliersListPage, SuppliersFormPage } from "@/modules/suppliers";
 import { UsersListPage } from "@/modules/users/pages/UsersList";
+import { HeroSlidesPage } from "@/modules/site-content/pages/HeroSlidesPage";
+import { FeaturedProductsPage } from "@/modules/site-content/pages/FeaturedProductsPage";
+import { NewArrivalsPage } from "@/modules/site-content/pages/NewArrivalsPage";
+import { BannersPage } from "@/modules/site-content/pages/BannersPage";
+import { CategoryCardsPage } from "@/modules/site-content/pages/CategoryCardsPage";
+import { LogoPage } from "@/modules/site-content/pages/LogoPage";
+import { ContactInfoPage } from "@/modules/site-content/pages/ContactInfoPage";
+import { ShippingTicketsPage } from "@/modules/shipping-tickets/pages/ShippingTicketsPage";
 
 export const router = createBrowserRouter([
   {
@@ -144,11 +152,47 @@ export const router = createBrowserRouter([
             element: <UsersListPage />,
           },
           {
+            path: "shipping-tickets",
+            element: <ShippingTicketsPage />,
+          },
+          {
+            path: "site",
+            children: [
+              { index: true, element: <Navigate to="/admin/site/hero" replace /> },
+              { path: "hero", element: <HeroSlidesPage /> },
+              { path: "featured", element: <FeaturedProductsPage /> },
+              { path: "new-arrivals", element: <NewArrivalsPage /> },
+              { path: "banners", element: <BannersPage /> },
+              { path: "categories", element: <CategoryCardsPage /> },
+              { path: "logo", element: <LogoPage /> },
+              { path: "contact", element: <ContactInfoPage /> },
+            ],
+          },
+          {
             path: "billing",
             lazy: async () => {
               const mod = await import("@/modules/billing/pages/BillingPage");
               return { Component: mod.BillingPage };
             },
+          },
+          {
+            path: "clients",
+            children: [
+              {
+                index: true,
+                lazy: async () => {
+                  const mod = await import("@/modules/clients/pages/ClientsList");
+                  return { Component: mod.ClientsList };
+                },
+              },
+              {
+                path: ":clientKey",
+                lazy: async () => {
+                  const mod = await import("@/modules/clients/pages/ClientDetail");
+                  return { Component: mod.ClientDetail };
+                },
+              },
+            ],
           },
         ],
       },

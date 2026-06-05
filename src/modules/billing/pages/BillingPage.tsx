@@ -1,27 +1,47 @@
 import { useState } from "react";
+import { useLocation } from "react-router";
 import { Button } from "@/shared/components/ui/button";
 import { Table } from "@/shared/components/ui/table";
 import { Input } from "@/shared/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/shared/components/ui/select";
 import { generateInvoicePDF } from "@/modules/orders/utils/pdf";
-import { Trash2, Download, Plus } from "lucide-react";
+import { Trash2, Download, Plus, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/shared/components/ui/card";
 import { ProductSearchInput } from "@/modules/orders/components/ProductSearchInput";
 import type { Product } from "@/modules/products/hooks/useProducts";
+import { useCreateInvoice } from "@/modules/invoices/hooks/useInvoices";
+import { toast } from "sonner";
 
 export const BillingPage = () => {
-  const [clientName, setClientName] = useState("");
+  // Datos precargados al venir desde la lista de Clientes ("Crear factura").
+  const location = useLocation();
+  const prefill = (location.state ?? {}) as { clientName?: string; phone?: string };
+
+  const [clientName, setClientName] = useState(prefill.clientName ?? "");
   const [address, setAddress] = useState("");
   const [address2, setAddress2] = useState("");
   const [department, setDepartment] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(prefill.phone ?? "");
 
   const [items, setItems] = useState<any[]>([]);
   const [seller, setSeller] = useState<string | undefined>(undefined);
-  const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
-  const [delivered, setDelivered] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<string[]>(["Efectivo", "Transferencia", "Crédito"]);
+  const [delivered, setDelivered] = useState(true);
+  // Se activa tras guardar una factura, para ofrecer crear otra del mismo cliente.
+  const [canRepeat, setCanRepeat] = useState(false);
+
+  const createInvoice = useCreateInvoice();
 
   const PAYMENT_OPTIONS = ["Efectivo", "Transferencia", "Crédito"];
+
+  // Limpia solo los artículos y conserva los datos del cliente (nombre, teléfono,
+  // dirección, vendedor y forma de cobro) para facturar de nuevo al mismo usuario.
+  const startNewInvoiceSameClient = () => {
+    setItems([]);
+    setCanRepeat(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast.info(`Nueva factura para ${clientName.trim() || "el mismo cliente"}`);
+  };
 
   const togglePaymentMethod = (method: string) => {
     setPaymentMethods(prev =>
@@ -83,6 +103,51 @@ export const BillingPage = () => {
     generateInvoicePDF(orderMock, seller, paymentMethods, delivered);
   };
 
+  const handleSaveInvoice = async () => {
+    if (!clientName.trim()) {
+      toast.warning("Ingresa el nombre del cliente");
+      return;
+    }
+    if (items.length === 0) {
+      toast.warning("Agrega al menos un artículo");
+      return;
+    }
+    try {
+      await createInvoice.mutateAsync({
+        client_name: clientName.trim(),
+        client_phone: phone || null,
+        profile_id: null,
+        order_id: null,
+        seller: seller ?? null,
+        payment_methods: paymentMethods.length ? paymentMethods.join(",") : null,
+        delivered,
+        subtotal,
+        total,
+        address: {
+          address: address || null,
+          address_line_2: address2 || null,
+          department_name: department || null,
+          phone: phone || null,
+        },
+        items: items.map((it) => ({
+          name: it.name || "Artículo sin nombre",
+          sku: it.sku || null,
+          quantity: Number(it.quantity),
+          unit_price: Number(it.price),
+        })),
+      });
+      setCanRepeat(true);
+      toast.success("Factura guardada", {
+        action: {
+          label: "Otra del mismo cliente",
+          onClick: startNewInvoiceSameClient,
+        },
+      });
+    } catch (err: any) {
+      toast.error(err.message || "Error al guardar la factura");
+    }
+  };
+
   return (
     <div className="space-y-6 pb-20 p-6">
       <div className="flex items-center justify-between">
@@ -100,6 +165,14 @@ export const BillingPage = () => {
               <SelectItem value="Alejandro">Alejandro</SelectItem>
             </SelectContent>
           </Select>
+          {canRepeat && (
+            <Button onClick={startNewInvoiceSameClient} variant="secondary" className="flex items-center gap-2 h-9">
+              <Plus size={16} /> Otra factura (mismo cliente)
+            </Button>
+          )}
+          <Button onClick={handleSaveInvoice} variant="outline" className="flex items-center gap-2 h-9" disabled={items.length === 0 || createInvoice.isPending}>
+            <Save size={16} /> {createInvoice.isPending ? "Guardando..." : "Guardar factura"}
+          </Button>
           <Button onClick={handleGeneratePDF} className="flex items-center gap-2 h-9" disabled={items.length === 0}>
             <Download size={16} /> Descargar PDF
           </Button>

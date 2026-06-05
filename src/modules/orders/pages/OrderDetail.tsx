@@ -11,9 +11,10 @@ import { toast } from "sonner";
 import HistoryDialog from "../components/HistoryDialog";
 import PaymentProofDialog from "../components/PaymentProofDialog";
 import { generateInvoicePDF } from "../utils/pdf";
-import { Download, Edit, Save, X, Trash2 } from "lucide-react";
+import { Download, Edit, Save, X, Trash2, FileText } from "lucide-react";
 import { ProductSearchInput } from "../components/ProductSearchInput";
 import type { Product } from "@/modules/products/hooks/useProducts";
+import { useCreateInvoice } from "@/modules/invoices/hooks/useInvoices";
 
 export const OrderDetailPage = () => {
   const { id } = useParams();
@@ -21,6 +22,7 @@ export const OrderDetailPage = () => {
   const { data: statuses = [] } = useOrderStatuses();
   const updateStatus = useUpdateOrderStatus();
   const updateOrderDetails = useUpdateOrderDetails();
+  const createInvoice = useCreateInvoice();
 
   const [pendingStatus, setPendingStatus] = useState<string | undefined>(undefined);
   const [showHistory, setShowHistory] = useState(false);
@@ -143,6 +145,39 @@ export const OrderDetailPage = () => {
     }
   };
 
+  const handleSaveInvoice = async () => {
+    try {
+      await createInvoice.mutateAsync({
+        client_name: order.profile?.full_name ?? "Desconocido",
+        client_phone: address?.phone ?? null,
+        profile_id: order.profile_id ?? null,
+        order_id: order.id,
+        seller: seller ?? null,
+        payment_methods: null,
+        delivered: false,
+        subtotal: currentSubtotal,
+        total: currentTotal,
+        address: address
+          ? {
+              address: address.address ?? null,
+              address_line_2: address.address_line_2 ?? null,
+              department_name: address.department_name ?? address.department_id ?? null,
+              phone: address.phone ?? null,
+            }
+          : null,
+        items: currentItems.map((it: any) => ({
+          name: getItemName(it),
+          sku: getItemSku(it) === "-" ? null : getItemSku(it),
+          quantity: Number(it.quantity),
+          unit_price: getItemUnitPrice(it),
+        })),
+      });
+      toast.success("Factura guardada");
+    } catch (err: any) {
+      toast.error(err.message || "Error al guardar la factura");
+    }
+  };
+
   return (
     <div className="space-y-6 pb-20">
       <div className="flex items-center justify-between">
@@ -163,6 +198,9 @@ export const OrderDetailPage = () => {
             </Select>
             <Button variant="outline" onClick={() => generateInvoicePDF(order, seller)} className="flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
               <Download size={16} /> PDF
+            </Button>
+            <Button variant="outline" onClick={handleSaveInvoice} disabled={createInvoice.isPending} className="flex items-center gap-2">
+              <FileText size={16} /> {createInvoice.isPending ? "Guardando..." : "Guardar factura"}
             </Button>
           </div>
           <Link to="/admin/orders">

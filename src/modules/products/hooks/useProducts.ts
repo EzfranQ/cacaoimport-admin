@@ -54,6 +54,8 @@ export interface ProductsQueryParams {
   search?: string;
   supplierSearch?: string;
   includeDeleted?: boolean;
+  /** Si es true, muestra ÚNICAMENTE los productos eliminados (papelera). */
+  onlyDeleted?: boolean;
 }
 
 export interface ProductsResult {
@@ -74,12 +76,13 @@ export const useProducts = (params: ProductsQueryParams = {}) => {
     search,
     supplierSearch,
     includeDeleted = false,
+    onlyDeleted = false,
   } = params;
 
   return useQuery({
     queryKey: [
       "products",
-      { page, pageSize, sortBy, sortOrder, search, supplierSearch, includeDeleted },
+      { page, pageSize, sortBy, sortOrder, search, supplierSearch, includeDeleted, onlyDeleted },
     ],
     queryFn: async (): Promise<ProductsResult> => {
       const offset = (page - 1) * pageSize;
@@ -102,7 +105,10 @@ export const useProducts = (params: ProductsQueryParams = {}) => {
         query = query.not("suppliers", "is", null).filter("suppliers.business_name", "ilike", `%${supplierSearch}%`);
       }
 
-      if (!includeDeleted) {
+      if (onlyDeleted) {
+        // Solo productos en la papelera
+        query = query.not("deleted_at", "is", null);
+      } else if (!includeDeleted) {
         query = query.is("deleted_at", null);
       }
 
@@ -280,6 +286,26 @@ export const useRestoreProduct = () => {
         throw new Error(`Error restoring product: ${error.message}`);
       }
       return data as Product;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+};
+
+/**
+ * Vacía la papelera: elimina DEFINITIVAMENTE todos los productos con deleted_at
+ * (y sus datos asociados + imágenes en Storage) vía la función RPC purge_deleted_products.
+ * Devuelve la cantidad de productos eliminados.
+ */
+export const usePurgeDeletedProducts = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<number> => {
+      const { data, error } = await supabase.rpc("purge_deleted_products");
+      if (error) throw new Error(error.message);
+      return (data as number) ?? 0;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });

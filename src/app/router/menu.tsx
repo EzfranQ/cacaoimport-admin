@@ -1,4 +1,4 @@
-import { Store, Tags, SlidersHorizontal, Scale, Package, Truck, ShoppingCart, Receipt, Users } from "lucide-react";
+import { Store, Tags, SlidersHorizontal, Scale, Package, Truck, ShoppingCart, Receipt, Users, Contact, LayoutTemplate, Printer } from "lucide-react";
 
 export const data = {
   teams: [
@@ -52,10 +52,37 @@ export const data = {
       isActive: false,
     },
     {
+      title: "Tickets de Envío",
+      url: "/admin/shipping-tickets",
+      icon: Printer,
+      isActive: false,
+    },
+    {
+      title: "Clientes",
+      url: "/admin/clients",
+      icon: Contact,
+      isActive: false,
+    },
+    {
       title: "Usuarios",
       url: "/admin/users",
       icon: Users,
       isActive: false,
+    },
+    {
+      title: "Contenido del sitio",
+      url: "/admin/site",
+      icon: LayoutTemplate,
+      isActive: false,
+      items: [
+        { title: "Carrusel principal", url: "/admin/site/hero" },
+        { title: "Productos destacados", url: "/admin/site/featured" },
+        { title: "Nuevos Ingresos", url: "/admin/site/new-arrivals" },
+        { title: "Banners", url: "/admin/site/banners" },
+        { title: "Categorías del Home", url: "/admin/site/categories" },
+        { title: "Logo", url: "/admin/site/logo" },
+        { title: "Dirección y horarios", url: "/admin/site/contact" },
+      ],
     }
   ],
 }
