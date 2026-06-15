@@ -35,7 +35,10 @@ function SlideCard({
   const [imageUrl, setImageUrl] = useState(slide.image_url ?? "");
   const [title, setTitle] = useState(slide.title ?? "");
   const [subtitle, setSubtitle] = useState(slide.subtitle ?? "");
+  const [description, setDescription] = useState(slide.description ?? "");
   const [alt, setAlt] = useState(slide.alt ?? "");
+  const [href, setHref] = useState(slide.href ?? "/products");
+  const [badge, setBadge] = useState(slide.badge ?? "");
   const [sortOrder, setSortOrder] = useState<number>(slide.sort_order ?? 0);
   const [isActive, setIsActive] = useState<boolean>(slide.is_active ?? true);
 
@@ -43,7 +46,10 @@ function SlideCard({
     setImageUrl(slide.image_url ?? "");
     setTitle(slide.title ?? "");
     setSubtitle(slide.subtitle ?? "");
+    setDescription(slide.description ?? "");
     setAlt(slide.alt ?? "");
+    setHref(slide.href ?? "/products");
+    setBadge(slide.badge ?? "");
     setSortOrder(slide.sort_order ?? 0);
     setIsActive(slide.is_active ?? true);
   }, [slide]);
@@ -61,7 +67,10 @@ function SlideCard({
         image_url: imageUrl,
         title: title || null,
         subtitle: subtitle || null,
+        description: description || null,
         alt: alt || null,
+        href: href || "/products",
+        badge: badge || null,
         sort_order: Number(sortOrder) || 0,
         is_active: isActive,
       });
@@ -95,11 +104,25 @@ function SlideCard({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Título</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Cuidado Personal" />
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ej: TECNOLOGÍA" />
             </div>
             <div className="space-y-1.5">
-              <Label>Subtítulo</Label>
-              <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Texto secundario" />
+              <Label>Subtítulo (naranja)</Label>
+              <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Ej: SIN LÍMITES" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Descripción</Label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Los mejores productos al mejor precio." />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Enlace del botón (href)</Label>
+              <Input value={href} onChange={(e) => setHref(e.target.value)} placeholder="/products" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Badge (opcional)</Label>
+              <Input value={badge} onChange={(e) => setBadge(e.target.value)} placeholder="Ej: NUEVO, -20%" />
             </div>
           </div>
           <div className="space-y-1.5">

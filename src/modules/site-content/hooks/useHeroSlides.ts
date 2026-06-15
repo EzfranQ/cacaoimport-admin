@@ -9,12 +9,15 @@ export interface HeroSlide {
   image_url: string;
   title: string | null;
   subtitle: string | null;
+  description: string | null;
   alt: string | null;
+  href: string | null;
+  badge: string | null;
   sort_order: number;
   is_active: boolean;
 }
 
-export type HeroSlideInput = Partial<HeroSlide> & { image_url: string };
+export type HeroSlideInput = Partial<Omit<HeroSlide, "id">> & { id?: string; image_url: string };
 
 const KEY = ["hero_slides"];
 
