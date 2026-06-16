@@ -21,11 +21,13 @@ export interface ContactInfo {
   addressLines: string[];
   mapsLink: string;
   hours: HourRow[];
+  whatsapp: string;
 }
 
 const DEFAULT: ContactInfo = {
   addressLines: ["Barrio de los Judíos", "Montevideo, Uruguay"],
   mapsLink: "https://maps.app.goo.gl/FTH1AmUQXJHybP9s8",
+  whatsapp: "59896002668",
   hours: [
     { label: "Lunes a Viernes", value: "9:00 – 17:00" },
     { label: "Sábado", value: "9:00 – 13:00" },
@@ -40,12 +42,14 @@ export const ContactInfoPage = () => {
   const [addressText, setAddressText] = useState("");
   const [mapsLink, setMapsLink] = useState("");
   const [hours, setHours] = useState<HourRow[]>([]);
+  const [whatsapp, setWhatsapp] = useState("");
 
   useEffect(() => {
     const c = data ?? DEFAULT;
     setAddressText((c.addressLines ?? []).join("\n"));
     setMapsLink(c.mapsLink ?? "");
     setHours(c.hours ?? []);
+    setWhatsapp(c.whatsapp ?? DEFAULT.whatsapp);
   }, [data]);
 
   const updateHour = (i: number, field: keyof HourRow, val: string) =>
@@ -60,6 +64,7 @@ export const ContactInfoPage = () => {
         .map((s) => s.trim())
         .filter(Boolean),
       mapsLink: mapsLink.trim(),
+      whatsapp: whatsapp.replace(/\D/g, ""),
       hours: hours
         .map((h) => ({ label: h.label.trim(), value: h.value.trim() }))
         .filter((h) => h.label || h.value),
@@ -110,6 +115,24 @@ export const ContactInfoPage = () => {
                   Abrí Google Maps, buscá tu local, tocá "Compartir" y pegá el enlace acá.
                 </p>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>WhatsApp / Teléfono</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5">
+              <Label>Número (solo dígitos, con código de país)</Label>
+              <Input
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                placeholder="59896002668"
+              />
+              <p className="text-xs text-muted-foreground">
+                Ingresá el número sin espacios ni guiones, con código de país. Ej: <code>59896002668</code>.<br />
+                Se usa en el botón flotante de WhatsApp, el header móvil, el footer y la página de contacto.
+              </p>
             </CardContent>
           </Card>
 
