@@ -22,6 +22,8 @@ import { BannersPage } from "@/modules/site-content/pages/BannersPage";
 import { CategoryCardsPage } from "@/modules/site-content/pages/CategoryCardsPage";
 import { LogoPage } from "@/modules/site-content/pages/LogoPage";
 import { ContactInfoPage } from "@/modules/site-content/pages/ContactInfoPage";
+import { OffersHighlightsPage } from "@/modules/site-content/pages/OffersHighlightsPage";
+import { TrustItemsPage } from "@/modules/site-content/pages/TrustItemsPage";
 import { ShippingTicketsPage } from "@/modules/shipping-tickets/pages/ShippingTicketsPage";
 
 export const router = createBrowserRouter([
@@ -166,6 +168,8 @@ export const router = createBrowserRouter([
               { path: "categories", element: <CategoryCardsPage /> },
               { path: "logo", element: <LogoPage /> },
               { path: "contact", element: <ContactInfoPage /> },
+              { path: "offers", element: <OffersHighlightsPage /> },
+              { path: "trust-items", element: <TrustItemsPage /> },
             ],
           },
           {

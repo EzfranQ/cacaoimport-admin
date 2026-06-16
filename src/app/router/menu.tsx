@@ -82,6 +82,8 @@ export const data = {
         { title: "Categorías del Home", url: "/admin/site/categories" },
         { title: "Logo", url: "/admin/site/logo" },
         { title: "Dirección y horarios", url: "/admin/site/contact" },
+        { title: "Ofertas Destacadas", url: "/admin/site/offers" },
+        { title: "Textos del Banner", url: "/admin/site/trust-items" },
       ],
     }
   ],
