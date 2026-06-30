@@ -48,6 +48,7 @@ function CategoryCardEditor({
   const [href, setHref] = useState(card.href ?? "");
   const [sortOrder, setSortOrder] = useState<number>(card.sort_order ?? 0);
   const [isActive, setIsActive] = useState<boolean>(card.is_active ?? true);
+  const [imageSizePx, setImageSizePx] = useState<number>(card.image_size_px ?? 40);
 
   useEffect(() => {
     setName(card.name ?? "");
@@ -56,6 +57,7 @@ function CategoryCardEditor({
     setHref(card.href ?? "");
     setSortOrder(card.sort_order ?? 0);
     setIsActive(card.is_active ?? true);
+    setImageSizePx(card.image_size_px ?? 40);
   }, [card]);
 
   const isDraft = !card.id;
@@ -72,6 +74,7 @@ function CategoryCardEditor({
         href: href || null,
         sort_order: Number(sortOrder) || 0,
         is_active: isActive,
+        image_size_px: Number(imageSizePx) || 40,
       });
       toast.success(isDraft ? "Categoría creada" : "Categoría actualizada");
       if (isDraft) onSavedDraft?.();
@@ -146,6 +149,29 @@ function CategoryCardEditor({
                 value={sortOrder}
                 onChange={(e) => setSortOrder(Number(e.target.value))}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tamaño imagen (px)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  className="w-24"
+                  min={16}
+                  max={200}
+                  step={4}
+                  value={imageSizePx}
+                  onChange={(e) => setImageSizePx(Number(e.target.value))}
+                />
+                {imageUrl && (
+                  <img
+                    src={imageUrl}
+                    alt="preview"
+                    style={{ width: imageSizePx, height: imageSizePx }}
+                    className="object-contain border border-gray-200 rounded"
+                  />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">Actual: {imageSizePx}px (mín 16 · máx 200)</p>
             </div>
             <div className="flex items-center gap-2 pt-5">
               <Switch checked={isActive} onCheckedChange={setIsActive} />

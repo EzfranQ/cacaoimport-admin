@@ -12,6 +12,7 @@ export interface CategoryCard {
   href: string | null;
   sort_order: number;
   is_active: boolean;
+  image_size_px: number | null;
 }
 
 export type CategoryCardInput = Partial<CategoryCard> & {
